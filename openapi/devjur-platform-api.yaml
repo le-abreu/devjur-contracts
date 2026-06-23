@@ -1,0 +1,139 @@
+openapi: 3.1.0
+info:
+  title: DEVJUR Platform API
+  version: 0.1.0
+  description: Foundation API for tenant context, authenticated user context and tenant database probe.
+servers:
+  - url: http://demo.api.localhost:8080
+    description: Local demo tenant API
+security:
+  - bearerAuth: []
+paths:
+  /api/foundation/tenant/current:
+    get:
+      operationId: getCurrentTenant
+      summary: Returns the tenant resolved from the request host.
+      tags: [Foundation]
+      responses:
+        "200":
+          description: Current tenant context.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentTenantResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/foundation/me:
+    get:
+      operationId: getCurrentUser
+      summary: Returns the authenticated user context.
+      tags: [Foundation]
+      responses:
+        "200":
+          description: Current authenticated user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentUserResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/foundation/probe:
+    post:
+      operationId: createFoundationProbe
+      summary: Writes a probe record into the current tenant database.
+      tags: [Foundation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProbeRequest"
+      responses:
+        "201":
+          description: Probe created in the tenant database.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    Unauthorized:
+      description: Authentication is missing or invalid.
+    Forbidden:
+      description: Tenant, issuer, realm or permission validation failed.
+  schemas:
+    CurrentTenantResponse:
+      type: object
+      required: [tenantKey, host, realm, issuer]
+      properties:
+        tenantKey:
+          type: string
+          example: demo
+        host:
+          type: string
+          example: demo.api.localhost
+        realm:
+          type: string
+          example: devjur-demo
+        issuer:
+          type: string
+          example: http://localhost:8081/realms/devjur-demo
+    CurrentUserResponse:
+      type: object
+      required: [subject, preferredUsername, tenantKey, issuer, roles]
+      properties:
+        subject:
+          type: string
+          example: 9dc62667-7df6-48e4-a877-a1784e81c57f
+        preferredUsername:
+          type: string
+          example: admin.demo
+        tenantKey:
+          type: string
+          example: demo
+        issuer:
+          type: string
+          example: http://localhost:8081/realms/devjur-demo
+        roles:
+          type: array
+          items:
+            type: string
+          example: [DEVJUR_ADMIN]
+    CreateProbeRequest:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: Tenant database write check
+    ProbeResponse:
+      type: object
+      required: [id, tenantKey, message, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantKey:
+          type: string
+          example: demo
+        message:
+          type: string
+          example: Tenant database write check
+        createdAt:
+          type: string
+          format: date-time
