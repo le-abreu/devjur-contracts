@@ -149,30 +149,30 @@ components:
         tenantKey:
           type: string
           pattern: ^[a-z0-9-]{3,40}$
-          example: demo
+          example: acme
         displayName:
           type: string
           minLength: 3
           maxLength: 120
-          example: DEVJUR Demo
+          example: ACME Juridico
         apiHost:
           type: string
-          example: demo.api.localhost
+          example: acme.api.localhost
         webHost:
           type: string
-          example: demo.localhost
+          example: acme.localhost
         realm:
           type: string
           pattern: ^[a-z0-9-]{3,80}$
-          example: devjur-demo
+          example: devjur-acme
         adminUsername:
           type: string
-          default: admin
-          example: admin.demo
+          default: admin.acme
+          example: admin.acme
         adminEmail:
           type: string
           format: email
-          example: admin@demo.localhost
+          example: admin.acme@devjur.local
     ProvisionTenantResponse:
       type: object
       required: [tenantKey, displayName, apiHost, webHost, realm, status, vaultPath, createdAt]
@@ -180,27 +180,27 @@ components:
         tenantKey:
           type: string
           pattern: ^[a-z0-9-]{3,40}$
-          example: demo
+          example: acme
         displayName:
           type: string
-          example: DEVJUR Demo
+          example: ACME Juridico
         apiHost:
           type: string
-          example: demo.api.localhost
+          example: acme.api.localhost
         webHost:
           type: string
-          example: demo.localhost
+          example: acme.localhost
         realm:
           type: string
           pattern: ^[a-z0-9-]{3,80}$
-          example: devjur-demo
+          example: devjur-acme
         status:
           type: string
           enum: [PROVISIONING, ACTIVE, FAILED]
           example: ACTIVE
         vaultPath:
           type: string
-          example: secret/devjur/tenants/demo
+          example: secret/data/devjur/tenants/acme/database
         createdAt:
           type: string
           format: date-time
@@ -221,16 +221,16 @@ components:
       properties:
         id:
           type: string
-          example: platform.tenants
+          example: dashboard
         label:
           type: string
-          example: Tenants
+          example: Dashboard
         route:
           type: string
-          example: /platform/tenants
+          example: /
         requiredRole:
           type: string
-          example: DEVJUR_PLATFORM_ADMIN
+          example: DEVJUR_ADMIN
     CurrentTenantResponse:
       type: object
       required: [tenantKey, host, realm, issuer]
