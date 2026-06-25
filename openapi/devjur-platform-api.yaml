@@ -9,6 +9,73 @@ servers:
 security:
   - bearerAuth: []
 paths:
+  /api/platform/tenants:
+    post:
+      operationId: provisionTenant
+      summary: Provisions a tenant realm, hosts and baseline administrative access.
+      tags: [Platform Tenants]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProvisionTenantRequest"
+      responses:
+        "201":
+          description: Tenant provisioning request accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProvisionTenantResponse"
+        "400":
+          description: Provisioning request is invalid.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Tenant key, host or realm already exists.
+  /api/platform/tenants/{tenantKey}:
+    get:
+      operationId: getTenantProvisioning
+      summary: Returns tenant provisioning status and resolved platform metadata.
+      tags: [Platform Tenants]
+      parameters:
+        - name: tenantKey
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-z0-9-]{3,40}$
+      responses:
+        "200":
+          description: Tenant provisioning status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProvisionTenantResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Tenant provisioning record was not found.
+  /api/platform/permissions/navigation:
+    get:
+      operationId: getNavigationPermissions
+      summary: Returns navigation entries allowed for the authenticated user.
+      tags: [Platform Permissions]
+      responses:
+        "200":
+          description: Navigation permission projection.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NavigationPermissionResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /api/foundation/tenant/current:
     get:
       operationId: getCurrentTenant
@@ -75,6 +142,95 @@ components:
     Forbidden:
       description: Tenant, issuer, realm or permission validation failed.
   schemas:
+    ProvisionTenantRequest:
+      type: object
+      required: [tenantKey, displayName, apiHost, webHost, realm]
+      properties:
+        tenantKey:
+          type: string
+          pattern: ^[a-z0-9-]{3,40}$
+          example: demo
+        displayName:
+          type: string
+          minLength: 3
+          maxLength: 120
+          example: DEVJUR Demo
+        apiHost:
+          type: string
+          example: demo.api.localhost
+        webHost:
+          type: string
+          example: demo.localhost
+        realm:
+          type: string
+          pattern: ^[a-z0-9-]{3,80}$
+          example: devjur-demo
+        adminUsername:
+          type: string
+          default: admin
+          example: admin.demo
+        adminEmail:
+          type: string
+          format: email
+          example: admin@demo.localhost
+    ProvisionTenantResponse:
+      type: object
+      required: [tenantKey, displayName, apiHost, webHost, realm, status, vaultPath, createdAt]
+      properties:
+        tenantKey:
+          type: string
+          pattern: ^[a-z0-9-]{3,40}$
+          example: demo
+        displayName:
+          type: string
+          example: DEVJUR Demo
+        apiHost:
+          type: string
+          example: demo.api.localhost
+        webHost:
+          type: string
+          example: demo.localhost
+        realm:
+          type: string
+          pattern: ^[a-z0-9-]{3,80}$
+          example: devjur-demo
+        status:
+          type: string
+          enum: [PROVISIONING, ACTIVE, FAILED]
+          example: ACTIVE
+        vaultPath:
+          type: string
+          example: secret/devjur/tenants/demo
+        createdAt:
+          type: string
+          format: date-time
+    NavigationPermissionResponse:
+      type: object
+      required: [tenantKey, entries]
+      properties:
+        tenantKey:
+          type: string
+          example: demo
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/NavigationEntry"
+    NavigationEntry:
+      type: object
+      required: [id, label, route, requiredRole]
+      properties:
+        id:
+          type: string
+          example: platform.tenants
+        label:
+          type: string
+          example: Tenants
+        route:
+          type: string
+          example: /platform/tenants
+        requiredRole:
+          type: string
+          example: DEVJUR_PLATFORM_ADMIN
     CurrentTenantResponse:
       type: object
       required: [tenantKey, host, realm, issuer]

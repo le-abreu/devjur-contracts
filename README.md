@@ -15,3 +15,13 @@ The phase 1 OpenAPI contract is available at:
 ```text
 openapi/devjur-platform-api.yaml
 ```
+
+## Phase 2 Contracts
+
+The platform provisioning and navigation permission contracts are defined in the same OpenAPI document.
+
+ADR 0002 documents the Keycloak-first authorization decision:
+
+```text
+adr/0002-keycloak-first-authorization.md
+```
