@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.devjur.local/schemas/events/tenant-provisioned.schema.json",
+  "title": "Tenant Provisioned Payload",
+  "type": "object",
+  "required": [
+    "tenantKey",
+    "displayName",
+    "apiHost",
+    "webHost",
+    "realm",
+    "status"
+  ],
+  "properties": {
+    "tenantKey": {
+      "type": "string",
+      "example": "acme"
+    },
+    "displayName": {
+      "type": "string",
+      "example": "ACME Juridico"
+    },
+    "apiHost": {
+      "type": "string",
+      "example": "acme.api.localhost"
+    },
+    "webHost": {
+      "type": "string",
+      "example": "acme.localhost"
+    },
+    "realm": {
+      "type": "string",
+      "example": "devjur-acme"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE"
+      ]
+    }
+  }
+}

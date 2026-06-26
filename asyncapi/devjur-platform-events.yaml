@@ -1,0 +1,62 @@
+asyncapi: 3.0.0
+info:
+  title: DEVJUR Platform Events
+  version: 0.1.0
+  description: Event contracts for DEVJUR Platform integration events.
+defaultContentType: application/json
+servers:
+  local:
+    host: localhost:9092
+    protocol: kafka
+channels:
+  tenantProvisioned:
+    address: devjur.platform.tenant.provisioned.v1
+    messages:
+      TenantProvisioned:
+        $ref: '#/components/messages/TenantProvisioned'
+operations:
+  publishTenantProvisioned:
+    action: send
+    channel:
+      $ref: '#/channels/tenantProvisioned'
+    messages:
+      - $ref: '#/channels/tenantProvisioned/messages/TenantProvisioned'
+components:
+  messages:
+    TenantProvisioned:
+      name: TenantProvisioned
+      title: Tenant provisioned
+      summary: Emitted after a tenant becomes active.
+      contentType: application/json
+      payload:
+        type: object
+        required:
+          - eventId
+          - eventType
+          - eventVersion
+          - tenantKey
+          - occurredAt
+          - correlationId
+          - payload
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            const: TENANT_PROVISIONED
+          eventVersion:
+            type: integer
+            const: 1
+          tenantKey:
+            type: string
+          occurredAt:
+            type: string
+            format: date-time
+          correlationId:
+            type: string
+          source:
+            type: string
+            const: devjur-platform-api
+          payload:
+            $ref: '../schemas/events/tenant-provisioned.schema.json'

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.devjur.local/schemas/events/common-event-envelope.schema.json",
+  "title": "DEVJUR Common Event Envelope",
+  "type": "object",
+  "required": [
+    "eventId",
+    "eventType",
+    "eventVersion",
+    "tenantKey",
+    "occurredAt",
+    "correlationId",
+    "payload"
+  ],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "eventType": {
+      "type": "string"
+    },
+    "eventVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "tenantKey": {
+      "type": "string"
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "correlationId": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "default": "devjur-platform-api"
+    },
+    "payload": {
+      "type": "object"
+    }
+  }
+}
