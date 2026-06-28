@@ -42,3 +42,29 @@ ADR 0003 documents the outbox and AsyncAPI event versioning decision:
 ```text
 adr/0003-outbox-and-asyncapi-events.md
 ```
+
+## Phase 4 Contracts
+
+Enterprise auxiliary service contracts are defined in the OpenAPI document:
+
+```text
+openapi/devjur-platform-api.yaml
+```
+
+Phase 4 adds contracts for:
+
+- Feature flag evaluation.
+- Audited file upload, metadata lookup and download.
+- Tenant audit lookup.
+
+ADR 0004 documents the auxiliary services decision:
+
+```text
+adr/0004-enterprise-auxiliary-services.md
+```
+
+ADR 0005 documents audited S3-compatible storage:
+
+```text
+adr/0005-audited-s3-compatible-storage.md
+```
