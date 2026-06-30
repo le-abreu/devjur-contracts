@@ -8,6 +8,7 @@ Source of truth for DEVJUR Platform public contracts.
 - AsyncAPI specifications for event contracts.
 - Shared JSON Schemas for event payloads and envelopes.
 - ADRs for architectural decisions shared across repositories.
+- Operational documentation for local development and validation.
 
 ## Foundation API
 
@@ -67,4 +68,12 @@ ADR 0005 documents audited S3-compatible storage:
 
 ```text
 adr/0005-audited-s3-compatible-storage.md
+```
+
+## Local Development
+
+The foundation-v4 local workflow, service URLs, credentials, smoke tests and shutdown commands are documented at:
+
+```text
+docs/local-development.md
 ```
