@@ -76,6 +76,171 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+  /api/platform/features/{flagKey}/evaluate:
+    get:
+      operationId: evaluateFeatureFlag
+      summary: Evaluates a platform feature flag for the current tenant and user context.
+      tags: [Platform Features]
+      parameters:
+        - name: flagKey
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          example: platform.storage.enabled
+      responses:
+        "200":
+          description: Feature flag evaluation result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeatureFlagEvaluationResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/platform/files:
+    post:
+      operationId: uploadPlatformFile
+      summary: Uploads a tenant file through the API so metadata and audit can be recorded.
+      tags: [Platform Files]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: File uploaded and metadata recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileUploadResponse"
+        "400":
+          description: Upload request is invalid.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "503":
+          description: Storage service is disabled or unavailable.
+  /api/platform/files/{fileId}:
+    get:
+      operationId: getPlatformFileMetadata
+      summary: Returns tenant file metadata.
+      tags: [Platform Files]
+      parameters:
+        - $ref: "#/components/parameters/FileId"
+      responses:
+        "200":
+          description: File metadata.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileMetadataResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: File metadata was not found.
+  /api/platform/files/{fileId}/download:
+    get:
+      operationId: downloadPlatformFile
+      summary: Downloads a tenant file through the API so access can be audited.
+      tags: [Platform Files]
+      parameters:
+        - $ref: "#/components/parameters/FileId"
+      responses:
+        "200":
+          description: File bytes.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: File was not found.
+        "503":
+          description: Storage service is disabled or unavailable.
+  /api/platform/audit:
+    get:
+      operationId: searchAuditEntries
+      summary: Searches tenant audit entries.
+      tags: [Platform Audit]
+      parameters:
+        - name: action
+          in: query
+          required: false
+          schema:
+            type: string
+          example: FILE_UPLOADED
+        - name: resourceType
+          in: query
+          required: false
+          schema:
+            type: string
+          example: platform_file
+        - name: resourceId
+          in: query
+          required: false
+          schema:
+            type: string
+          example: 9dc62667-7df6-48e4-a877-a1784e81c57f
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        "200":
+          description: Audit entries ordered by occurrence time descending.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditEntryPageResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/platform/mail/test:
+    post:
+      operationId: sendPlatformTestEmail
+      summary: Sends a controlled test email through the platform mail service.
+      tags: [Platform Mail]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MailTestRequest"
+      responses:
+        "202":
+          description: Test email request accepted by the platform mail service.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MailTestResponse"
+        "400":
+          description: Mail test request is invalid.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /api/foundation/tenant/current:
     get:
       operationId: getCurrentTenant
@@ -136,6 +301,14 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  parameters:
+    FileId:
+      name: fileId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
   responses:
     Unauthorized:
       description: Authentication is missing or invalid.
@@ -293,3 +466,153 @@ components:
         createdAt:
           type: string
           format: date-time
+    FeatureFlagEvaluationResponse:
+      type: object
+      required: [flagKey, enabled, variant, reason]
+      properties:
+        flagKey:
+          type: string
+          example: platform.storage.enabled
+        enabled:
+          type: boolean
+          example: true
+        variant:
+          type:
+            - string
+            - "null"
+          example: beta
+        reason:
+          type: string
+          example: TARGETING_MATCH
+    FileUploadResponse:
+      type: object
+      required: [fileId, tenantKey, originalFilename, contentType, size, checksumSha256, createdAt]
+      properties:
+        fileId:
+          type: string
+          format: uuid
+        tenantKey:
+          type: string
+          example: demo
+        originalFilename:
+          type: string
+          example: contrato.pdf
+        contentType:
+          type: string
+          example: application/pdf
+        size:
+          type: integer
+          format: int64
+          minimum: 0
+          example: 24576
+        checksumSha256:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+        createdAt:
+          type: string
+          format: date-time
+    FileMetadataResponse:
+      type: object
+      required: [fileId, tenantKey, originalFilename, contentType, size, checksumSha256, createdAt, createdBy]
+      properties:
+        fileId:
+          type: string
+          format: uuid
+        tenantKey:
+          type: string
+          example: demo
+        originalFilename:
+          type: string
+          example: contrato.pdf
+        contentType:
+          type: string
+          example: application/pdf
+        size:
+          type: integer
+          format: int64
+          minimum: 0
+          example: 24576
+        checksumSha256:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          example: admin.demo
+    AuditEntryResponse:
+      type: object
+      required: [auditId, tenantKey, action, resourceType, resourceId, actor, correlationId, occurredAt, metadata]
+      properties:
+        auditId:
+          type: string
+          format: uuid
+        tenantKey:
+          type: string
+          example: demo
+        action:
+          type: string
+          example: FILE_UPLOADED
+        resourceType:
+          type: string
+          example: platform_file
+        resourceId:
+          type:
+            - string
+            - "null"
+          example: 9dc62667-7df6-48e4-a877-a1784e81c57f
+        actor:
+          type:
+            - string
+            - "null"
+          example: admin.demo
+        correlationId:
+          type: string
+          example: 2a3d625a-d8c1-4f10-9228-80292b39d183
+        occurredAt:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties: true
+    AuditEntryPageResponse:
+      type: object
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditEntryResponse"
+    MailTestRequest:
+      type: object
+      required: [to, subject, body]
+      properties:
+        to:
+          type: string
+          format: email
+          example: admin.demo@devjur.local
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 160
+          example: DEVJUR Mailpit smoke
+        body:
+          type: string
+          minLength: 1
+          maxLength: 4000
+          example: Teste de envio local
+    MailTestResponse:
+      type: object
+      required: [to, subject, status]
+      properties:
+        to:
+          type: string
+          format: email
+          example: admin.demo@devjur.local
+        subject:
+          type: string
+          example: DEVJUR Mailpit smoke
+        status:
+          type: string
+          enum: [ACCEPTED]
