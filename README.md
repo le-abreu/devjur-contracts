@@ -80,6 +80,12 @@ openapi/devjur-platform-api.yaml
 docs/contracts-module-model.md
 ```
 
+The next polish task is tracked at:
+
+```text
+docs/contracts-task-5-polish.md
+```
+
 ## Local Development
 
 The foundation-v4 local workflow, service URLs, credentials, smoke tests and shutdown commands are documented at:
