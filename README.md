@@ -71,6 +71,15 @@ ADR 0005 documents audited S3-compatible storage:
 adr/0005-audited-s3-compatible-storage.md
 ```
 
+## Phase 5 Contracts Module
+
+The first business module contract and minimum domain model are documented at:
+
+```text
+openapi/devjur-platform-api.yaml
+docs/contracts-module-model.md
+```
+
 ## Local Development
 
 The foundation-v4 local workflow, service URLs, credentials, smoke tests and shutdown commands are documented at:

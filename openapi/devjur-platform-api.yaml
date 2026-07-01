@@ -9,6 +9,172 @@ servers:
 security:
   - bearerAuth: []
 paths:
+  /api/contracts:
+    get:
+      operationId: listContracts
+      summary: Lists tenant contracts using the authenticated tenant context.
+      tags: [Contracts]
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/ContractStatus"
+        - name: query
+          in: query
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 120
+          description: Searches contract number, title and counterparty names.
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Tenant contracts ordered by most recent update.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      operationId: createContract
+      summary: Creates a tenant contract draft.
+      tags: [Contracts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContractRequest"
+      responses:
+        "201":
+          description: Contract draft created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractDetailResponse"
+        "400":
+          description: Contract request is invalid.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Contract number already exists for this tenant.
+  /api/contracts/{contractId}:
+    get:
+      operationId: getContract
+      summary: Returns a tenant contract detail.
+      tags: [Contracts]
+      parameters:
+        - $ref: "#/components/parameters/ContractId"
+      responses:
+        "200":
+          description: Contract detail.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractDetailResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Contract was not found in the current tenant.
+    patch:
+      operationId: updateContract
+      summary: Updates editable contract draft metadata.
+      tags: [Contracts]
+      parameters:
+        - $ref: "#/components/parameters/ContractId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateContractRequest"
+      responses:
+        "200":
+          description: Contract updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractDetailResponse"
+        "400":
+          description: Contract update is invalid.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Contract was not found in the current tenant.
+        "409":
+          description: Contract number already exists for this tenant.
+  /api/contracts/{contractId}/attachments:
+    get:
+      operationId: listContractAttachments
+      summary: Lists files attached to a tenant contract.
+      tags: [Contracts]
+      parameters:
+        - $ref: "#/components/parameters/ContractId"
+      responses:
+        "200":
+          description: Contract attachments ordered by creation time.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractAttachmentListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Contract was not found in the current tenant.
+    post:
+      operationId: attachContractFile
+      summary: Attaches an uploaded platform file to a tenant contract.
+      tags: [Contracts]
+      parameters:
+        - $ref: "#/components/parameters/ContractId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContractAttachmentRequest"
+      responses:
+        "201":
+          description: File attached to contract.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractAttachmentResponse"
+        "400":
+          description: Attachment request is invalid.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Contract or uploaded file was not found in the current tenant.
   /api/platform/tenants:
     post:
       operationId: provisionTenant
@@ -302,6 +468,13 @@ components:
       scheme: bearer
       bearerFormat: JWT
   parameters:
+    ContractId:
+      name: contractId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     FileId:
       name: fileId
       in: path
@@ -315,6 +488,340 @@ components:
     Forbidden:
       description: Tenant, issuer, realm or permission validation failed.
   schemas:
+    CreateContractRequest:
+      type: object
+      required: [title, type, parties]
+      properties:
+        contractNumber:
+          type:
+            - string
+            - "null"
+          minLength: 1
+          maxLength: 60
+          example: CTR-2026-0001
+        title:
+          type: string
+          minLength: 3
+          maxLength: 180
+          example: Prestacao de servicos juridicos
+        type:
+          $ref: "#/components/schemas/ContractType"
+        summary:
+          type:
+            - string
+            - "null"
+          maxLength: 1000
+          example: Contrato de prestacao de servicos recorrentes.
+        parties:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/ContractPartyRequest"
+        amount:
+          type:
+            - number
+            - "null"
+          format: double
+          minimum: 0
+          example: 15000.0
+        currency:
+          type:
+            - string
+            - "null"
+          pattern: ^[A-Z]{3}$
+          default: BRL
+          example: BRL
+        effectiveDate:
+          type:
+            - string
+            - "null"
+          format: date
+          example: 2026-07-01
+        expirationDate:
+          type:
+            - string
+            - "null"
+          format: date
+          example: 2027-06-30
+    UpdateContractRequest:
+      type: object
+      properties:
+        contractNumber:
+          type:
+            - string
+            - "null"
+          minLength: 1
+          maxLength: 60
+          example: CTR-2026-0001
+        title:
+          type: string
+          minLength: 3
+          maxLength: 180
+          example: Prestacao de servicos juridicos atualizada
+        type:
+          $ref: "#/components/schemas/ContractType"
+        status:
+          $ref: "#/components/schemas/ContractStatus"
+        summary:
+          type:
+            - string
+            - "null"
+          maxLength: 1000
+        parties:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/ContractPartyRequest"
+        amount:
+          type:
+            - number
+            - "null"
+          format: double
+          minimum: 0
+        currency:
+          type:
+            - string
+            - "null"
+          pattern: ^[A-Z]{3}$
+        effectiveDate:
+          type:
+            - string
+            - "null"
+          format: date
+        expirationDate:
+          type:
+            - string
+            - "null"
+          format: date
+    ContractListResponse:
+      type: object
+      required: [entries, page, size]
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContractSummaryResponse"
+        page:
+          type: integer
+          minimum: 0
+          example: 0
+        size:
+          type: integer
+          minimum: 1
+          example: 20
+        total:
+          type:
+            - integer
+            - "null"
+          minimum: 0
+          description: Optional total count when the backend can compute it cheaply.
+          example: 42
+    ContractSummaryResponse:
+      type: object
+      required: [contractId, tenantKey, title, type, status, primaryCounterparty, attachmentCount, createdAt, updatedAt]
+      properties:
+        contractId:
+          type: string
+          format: uuid
+        tenantKey:
+          type: string
+          example: demo
+        contractNumber:
+          type:
+            - string
+            - "null"
+          example: CTR-2026-0001
+        title:
+          type: string
+          example: Prestacao de servicos juridicos
+        type:
+          $ref: "#/components/schemas/ContractType"
+        status:
+          $ref: "#/components/schemas/ContractStatus"
+        primaryCounterparty:
+          type:
+            - string
+            - "null"
+          example: ACME Juridico
+        attachmentCount:
+          type: integer
+          minimum: 0
+          example: 2
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ContractDetailResponse:
+      type: object
+      required: [contractId, tenantKey, title, type, status, parties, attachments, createdAt, updatedAt, createdBy]
+      properties:
+        contractId:
+          type: string
+          format: uuid
+        tenantKey:
+          type: string
+          example: demo
+        contractNumber:
+          type:
+            - string
+            - "null"
+          example: CTR-2026-0001
+        title:
+          type: string
+          example: Prestacao de servicos juridicos
+        type:
+          $ref: "#/components/schemas/ContractType"
+        status:
+          $ref: "#/components/schemas/ContractStatus"
+        summary:
+          type:
+            - string
+            - "null"
+          example: Contrato de prestacao de servicos recorrentes.
+        parties:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContractPartyResponse"
+        amount:
+          type:
+            - number
+            - "null"
+          format: double
+          example: 15000.0
+        currency:
+          type:
+            - string
+            - "null"
+          pattern: ^[A-Z]{3}$
+          example: BRL
+        effectiveDate:
+          type:
+            - string
+            - "null"
+          format: date
+        expirationDate:
+          type:
+            - string
+            - "null"
+          format: date
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContractAttachmentResponse"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          example: admin.demo
+        updatedBy:
+          type:
+            - string
+            - "null"
+          example: admin.demo
+    ContractPartyRequest:
+      type: object
+      required: [role, displayName]
+      properties:
+        role:
+          type: string
+          enum: [OWNER, COUNTERPARTY, GUARANTOR, WITNESS]
+          example: COUNTERPARTY
+        displayName:
+          type: string
+          minLength: 2
+          maxLength: 180
+          example: ACME Juridico
+        document:
+          type:
+            - string
+            - "null"
+          maxLength: 40
+          example: "12.345.678/0001-90"
+        email:
+          type:
+            - string
+            - "null"
+          format: email
+          example: juridico@acme.local
+        primary:
+          type: boolean
+          default: false
+    ContractPartyResponse:
+      allOf:
+        - $ref: "#/components/schemas/ContractPartyRequest"
+        - type: object
+          required: [partyId]
+          properties:
+            partyId:
+              type: string
+              format: uuid
+    ContractAttachmentRequest:
+      type: object
+      required: [fileId, attachmentType]
+      properties:
+        fileId:
+          type: string
+          format: uuid
+          description: Identifier returned by the platform file upload endpoint.
+        attachmentType:
+          type: string
+          enum: [DRAFT, SIGNED, SUPPORTING_DOCUMENT, OTHER]
+          example: DRAFT
+        description:
+          type:
+            - string
+            - "null"
+          maxLength: 500
+          example: Minuta inicial enviada pelo fornecedor.
+    ContractAttachmentListResponse:
+      type: object
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContractAttachmentResponse"
+    ContractAttachmentResponse:
+      type: object
+      required: [attachmentId, contractId, file, attachmentType, createdAt, createdBy]
+      properties:
+        attachmentId:
+          type: string
+          format: uuid
+        contractId:
+          type: string
+          format: uuid
+        file:
+          $ref: "#/components/schemas/FileMetadataResponse"
+        attachmentType:
+          type: string
+          enum: [DRAFT, SIGNED, SUPPORTING_DOCUMENT, OTHER]
+        description:
+          type:
+            - string
+            - "null"
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          example: admin.demo
+    ContractType:
+      type: string
+      enum: [SERVICE_AGREEMENT, PURCHASE_AGREEMENT, NDA, ADDENDUM, OTHER]
+      example: SERVICE_AGREEMENT
+    ContractStatus:
+      type: string
+      enum: [DRAFT, IN_REVIEW, APPROVED, REJECTED, EXECUTED, CANCELLED]
+      example: DRAFT
     ProvisionTenantRequest:
       type: object
       required: [tenantKey, displayName, apiHost, webHost, realm]
