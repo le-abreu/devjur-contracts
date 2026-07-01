@@ -362,7 +362,31 @@ PY
 curl -sS http://localhost:8025/api/v1/messages
 ```
 
-O backend possui `PlatformMailService`; nesta etapa ainda nao ha endpoint HTTP dedicado para disparar email pela API.
+Smoke test pela API:
+
+```bash
+curl -sS -X POST http://localhost:8080/api/platform/mail/test \
+  -H "Host: demo.api.localhost" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "to": "admin.demo@devjur.local",
+    "subject": "DEVJUR Mailpit smoke",
+    "body": "Teste de envio local"
+  }'
+```
+
+Resposta esperada:
+
+```json
+{
+  "to": "admin.demo@devjur.local",
+  "subject": "DEVJUR Mailpit smoke",
+  "status": "ACCEPTED"
+}
+```
+
+Com `devjur.mail.enabled=true`, a mensagem deve aparecer em `http://localhost:8025/` e a auditoria tenant-local deve registrar `MAIL_SENT`.
 
 ### Observabilidade
 

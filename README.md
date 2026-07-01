@@ -57,6 +57,7 @@ Phase 4 adds contracts for:
 - Feature flag evaluation.
 - Audited file upload, metadata lookup and download.
 - Tenant audit lookup.
+- Controlled platform test email dispatch.
 
 ADR 0004 documents the auxiliary services decision:
 

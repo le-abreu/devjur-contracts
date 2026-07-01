@@ -217,6 +217,30 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+  /api/platform/mail/test:
+    post:
+      operationId: sendPlatformTestEmail
+      summary: Sends a controlled test email through the platform mail service.
+      tags: [Platform Mail]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MailTestRequest"
+      responses:
+        "202":
+          description: Test email request accepted by the platform mail service.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MailTestResponse"
+        "400":
+          description: Mail test request is invalid.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /api/foundation/tenant/current:
     get:
       operationId: getCurrentTenant
@@ -560,3 +584,35 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AuditEntryResponse"
+    MailTestRequest:
+      type: object
+      required: [to, subject, body]
+      properties:
+        to:
+          type: string
+          format: email
+          example: admin.demo@devjur.local
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 160
+          example: DEVJUR Mailpit smoke
+        body:
+          type: string
+          minLength: 1
+          maxLength: 4000
+          example: Teste de envio local
+    MailTestResponse:
+      type: object
+      required: [to, subject, status]
+      properties:
+        to:
+          type: string
+          format: email
+          example: admin.demo@devjur.local
+        subject:
+          type: string
+          example: DEVJUR Mailpit smoke
+        status:
+          type: string
+          enum: [ACCEPTED]
